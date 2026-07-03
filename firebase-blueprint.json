@@ -1,0 +1,147 @@
+{
+  "entities": {
+    "HeroProfile": {
+      "title": "HeroProfile",
+      "description": "The primary hero, video, and stats information for Savani Jaswanth",
+      "type": "object",
+      "properties": {
+        "hero": {
+          "type": "object",
+          "description": "Basic details like name, roles, badge, resumeUrl"
+        },
+        "video": {
+          "type": "object",
+          "description": "Featured video detail or introduction clip"
+        },
+        "stats": {
+          "type": "object",
+          "description": "Cached GitHub contributions, counts, and followers stats"
+        }
+      },
+      "required": ["hero", "video", "stats"]
+    },
+    "AboutStory": {
+      "title": "AboutStory",
+      "description": "The custom about me story paragraph",
+      "type": "object",
+      "properties": {
+        "story": {
+          "type": "string"
+        }
+      },
+      "required": ["story"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Details of a technical portfolio project",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "tech": { "type": "array" },
+        "liveUrl": { "type": "string" },
+        "githubUrl": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "featured": { "type": "boolean" },
+        "features": { "type": "array" }
+      },
+      "required": ["id", "title", "category", "description", "tech", "liveUrl", "githubUrl", "imageUrl", "featured"]
+    },
+    "SkillCategory": {
+      "title": "SkillCategory",
+      "description": "A category grouping specific core technical skills",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "items": { "type": "array" }
+      },
+      "required": ["name", "items"]
+    },
+    "TimelineEvent": {
+      "title": "TimelineEvent",
+      "description": "A single resume experience event in the timeline",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "year": { "type": "string" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "year", "title", "company", "description"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "An award or certificate of achievement details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "issuer": { "type": "string" },
+        "date": { "type": "string" },
+        "link": { "type": "string" }
+      },
+      "required": ["id", "title", "issuer", "date", "link"]
+    },
+    "ThemeSettings": {
+      "title": "ThemeSettings",
+      "description": "Application custom color, motion and glass theme settings",
+      "type": "object",
+      "properties": {
+        "accentColor": { "type": "string" },
+        "glassIntensity": { "type": "string" },
+        "animationSpeed": { "type": "string" }
+      },
+      "required": ["accentColor", "glassIntensity", "animationSpeed"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "A visitor contact submission message",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "company": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["name", "email", "message"]
+    }
+  },
+  "firestore": {
+    "/profile/info": {
+      "schema": "HeroProfile",
+      "description": "Savani Jaswanth master bio details"
+    },
+    "/profile/story": {
+      "schema": "AboutStory",
+      "description": "Savani Jaswanth long about me narrative"
+    },
+    "/settings/theme": {
+      "schema": "ThemeSettings",
+      "description": "Active design style parameters"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Individual project records"
+    },
+    "/skills/{skillId}": {
+      "schema": "SkillCategory",
+      "description": "Skills grouped by sub-domain"
+    },
+    "/experience/{experienceId}": {
+      "schema": "TimelineEvent",
+      "description": "Employment and role events"
+    },
+    "/certificates/{certId}": {
+      "schema": "Certificate",
+      "description": "Certifications"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "User feedback and inquiries"
+    }
+  }
+}

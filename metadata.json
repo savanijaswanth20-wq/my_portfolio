@@ -1,0 +1,8 @@
+{
+  "name": "Savani Jaswanth Portfolio",
+  "description": "A premium, Apple-quality cinematic personal portfolio website for Savani Jaswanth, featuring an interactive admin dashboard, custom project manager, real-time AI Resume Analyzer, and smooth immersive motion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

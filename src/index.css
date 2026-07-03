@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-accent-blue: #3b82f6;
+  --color-accent-violet: #8b5cf6;
+  --color-glass-bg: rgba(10, 10, 10, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Base style resets */
+body {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030303;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222222;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333333;
+}
+
+/* Glassmorphism primitives */
+.glass-panel-low {
+  background: rgba(8, 8, 8, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.glass-panel-medium {
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-panel-high {
+  background: rgba(12, 12, 12, 0.9);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Glowing backdrops */
+.glow-orb {
+  filter: blur(140px);
+  opacity: 0.45;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    transform: scale(1) translate(0px, 0px);
+    opacity: 0.45;
+  }
+  33% {
+    transform: scale(1.15) translate(40px, -20px);
+    opacity: 0.6;
+  }
+  66% {
+    transform: scale(0.9) translate(-20px, 30px);
+    opacity: 0.4;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 15s infinite ease-in-out;
+}
+
+.animate-pulse-slow-reverse {
+  animation: pulse-slow 18s infinite ease-in-out reverse;
+}
+
