@@ -8,6 +8,7 @@ import {
 import ParticleBackground from "./components/ParticleBackground";
 import AdminDashboard from "./components/AdminDashboard";
 import AIAssistant from "./components/AIAssistant";
+import ResumeAnalyzer from "./components/ResumeAnalyzer";
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
 import { isFirestoreEmpty, seedFirestore, subscribeToPortfolio, submitContactMessage } from "./lib/firebaseService";
 
@@ -156,6 +157,7 @@ export default function App() {
           <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-gray-400">
             <a href="#about" className="hover:text-white transition">About</a>
             <a href="#projects" className="hover:text-white transition">Projects</a>
+            <a href="#analyzer-tool" className="hover:text-white transition">AI Lab</a>
             <a href="#certificates" className="hover:text-white transition">Certificates</a>
             <a href="#contact" className="hover:text-white transition">Contact</a>
           </nav>
@@ -186,6 +188,7 @@ export default function App() {
         <div className="fixed inset-x-0 top-[60px] z-30 bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 p-6 flex flex-col gap-4 text-center text-sm font-mono md:hidden">
           <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-gray-300 hover:text-white">About</a>
           <a href="#projects" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-gray-300 hover:text-white">Projects</a>
+          <a href="#analyzer-tool" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-gray-300 hover:text-white">AI Lab</a>
           <a href="#certificates" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-gray-300 hover:text-white">Certificates</a>
           <a href="#contact" onClick={() => setIsMobileMenuOpen(false)} className="py-2 text-gray-300 hover:text-white">Contact</a>
         </div>
@@ -466,6 +469,16 @@ export default function App() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* AI Laboratory Section */}
+      <section className="py-20 px-6 max-w-7xl mx-auto border-t border-white/5 relative overflow-hidden">
+        {/* Ambient Glow Orb */}
+        <div 
+          className="absolute -top-10 left-1/3 w-96 h-96 rounded-full filter blur-3xl opacity-10 pointer-events-none"
+          style={{ backgroundColor: accentColor }}
+        />
+        <ResumeAnalyzer accentColor={accentColor} />
       </section>
 
       {/* Experience and Proof & GitHub metrics block */}

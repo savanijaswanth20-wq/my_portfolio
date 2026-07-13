@@ -1,0 +1,254 @@
+{
+  "hero": {
+    "name": "Savani Jaswanth",
+    "roles": [
+      "Python Developer",
+      "AI Developer",
+      "Backend Developer",
+      "UI/UX Designer"
+    ],
+    "avatarUrl": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=600",
+    "badge": "Available for Internship & Full-Time",
+    "resumeUrl": "",
+    "aboutBrief": "Highly motivated B.Com (Computers) graduate specializing in high-performance Python backends, LLM integrations, and elegant interface craftsmanship."
+  },
+  "video": {
+    "url": "https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-screen-close-up-42045-large.mp4",
+    "title": "Behind the Code: Engineering the Future",
+    "description": "A short cinematic preview of my engineering workflows, automated scripting systems, and AI integration pipelines."
+  },
+  "about": {
+    "story": "I am Savani Jaswanth, a dedicated Python and AI Developer who bridges the gap between structured commercial intelligence and high-execution technical architectures. Graduating with a B.Com in Computer Applications, I pivoted deeply into core software engineering, focusing on Python systems, machine learning pipelines, and responsive interactive products.\n\nI design backends with FastAPI and Flask, architect flexible real-time schemas with cloud stores, and engineer intelligent LLM applications using modern prompt strategies and Retrieval-Augmented Generation (RAG). To me, code is not just instructions—it is a medium for crafting high-fidelity digital solutions.",
+    "timeline": [
+      {
+        "id": "exp-1",
+        "year": "2024 - Present",
+        "title": "AI Integration & Python Developer",
+        "company": "Independent Projects",
+        "description": "Built custom AI Agents using Gemini and OpenAI APIs, designed autonomous file automation scripts, and established scalable API backends."
+      },
+      {
+        "id": "exp-2",
+        "year": "2022 - 2025",
+        "title": "B.Com in Computer Applications",
+        "company": "University Education",
+        "description": "Acquired critical business insight, data intelligence, and analytical skills, blending enterprise models with computer systems."
+      },
+      {
+        "id": "exp-3",
+        "year": "2024",
+        "title": "AI Developer Workshop & Hackathon",
+        "company": "Google AI Community",
+        "description": "Engaged in hands-on LLM orchestrations, RAG architecture patterns, and prompt safety alignment guidelines."
+      }
+    ]
+  },
+  "skills": {
+    "categories": [
+      {
+        "name": "Languages",
+        "items": [
+          {
+            "name": "Python",
+            "level": 95
+          },
+          {
+            "name": "SQL",
+            "level": 88
+          },
+          {
+            "name": "JavaScript",
+            "level": 82
+          },
+          {
+            "name": "HTML & CSS",
+            "level": 90
+          }
+        ]
+      },
+      {
+        "name": "Frameworks & Backends",
+        "items": [
+          {
+            "name": "Flask",
+            "level": 92
+          },
+          {
+            "name": "FastAPI",
+            "level": 88
+          },
+          {
+            "name": "React & Vite",
+            "level": 80
+          },
+          {
+            "name": "Tailwind CSS",
+            "level": 95
+          }
+        ]
+      },
+      {
+        "name": "AI & Generation",
+        "items": [
+          {
+            "name": "LLM Orchestration",
+            "level": 90
+          },
+          {
+            "name": "RAG Systems",
+            "level": 86
+          },
+          {
+            "name": "AI Agents",
+            "level": 85
+          },
+          {
+            "name": "Prompt Engineering",
+            "level": 96
+          }
+        ]
+      },
+      {
+        "name": "Tools & Clouds",
+        "items": [
+          {
+            "name": "Git & GitHub",
+            "level": 92
+          },
+          {
+            "name": "Firebase",
+            "level": 82
+          },
+          {
+            "name": "Google AI Studio",
+            "level": 94
+          },
+          {
+            "name": "VS Code & Figma",
+            "level": 90
+          }
+        ]
+      }
+    ]
+  },
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": "School ERP System",
+      "category": "Backend / Database",
+      "description": "A comprehensive institutional suite managing enrollment lifecycles, class schedules, grading models, and performance logs with robust security.",
+      "tech": [
+        "Python",
+        "Flask",
+        "PostgreSQL",
+        "Tailwind CSS"
+      ],
+      "liveUrl": "https://github.com/savani-jaswanth",
+      "githubUrl": "https://github.com/savani-jaswanth",
+      "imageUrl": "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800",
+      "featured": true,
+      "features": [
+        "Auto-grade reports generator",
+        "Secure multi-role dashboards",
+        "Interactive enrollment pipelines"
+      ]
+    },
+    {
+      "id": "proj-2",
+      "title": "AI Resume Analyzer",
+      "category": "AI / LLM Engineering",
+      "description": "A premium text analytical tool utilizing Gemini models to review resumes, score industry keywords, map role requirements, and output real-time alignment feedback.",
+      "tech": [
+        "FastAPI",
+        "Python",
+        "Google GenAI",
+        "React"
+      ],
+      "liveUrl": "#analyzer-tool",
+      "githubUrl": "https://github.com/savani-jaswanth",
+      "imageUrl": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=800",
+      "featured": true,
+      "features": [
+        "Keyword matching index",
+        "Automated syntax enhancer",
+        "Mock-recruiter screening report"
+      ]
+    },
+    {
+      "id": "proj-3",
+      "title": "Cinematic Portfolio Web App",
+      "category": "Interactive Design",
+      "description": "An elegant, Apple-quality portfolio featuring fluid motion, high-end visual curves, glass panels, live resume scoring, and full-stack administration controls.",
+      "tech": [
+        "React 19",
+        "TypeScript",
+        "Tailwind CSS v4",
+        "Motion"
+      ],
+      "liveUrl": "/",
+      "githubUrl": "https://github.com/savani-jaswanth",
+      "imageUrl": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800",
+      "featured": true,
+      "features": [
+        "Glassmorphic visual language",
+        "Interactive particle background",
+        "Instant content administration deck"
+      ]
+    },
+    {
+      "id": "proj-4",
+      "title": "Python Automation Engine",
+      "category": "Python Scripting",
+      "description": "An orchestration suite of custom Python tasks that scraps research listings, syncs data records across directories, and automates multi-recipient email updates.",
+      "tech": [
+        "Python",
+        "Playwright",
+        "Docker",
+        "Cron APIs"
+      ],
+      "liveUrl": "https://github.com/savani-jaswanth",
+      "githubUrl": "https://github.com/savani-jaswanth",
+      "imageUrl": "https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?auto=format&fit=crop&q=80&w=800",
+      "featured": true,
+      "features": [
+        "Multi-thread secure scraper",
+        "Automated email dispatcher",
+        "Failure logs alerts system"
+      ]
+    }
+  ],
+  "certificates": [
+    {
+      "id": "cert-1",
+      "title": "Python Backend Developer Certification",
+      "issuer": "HackerRank & Coursera",
+      "date": "2024",
+      "link": "https://github.com/savani-jaswanth"
+    },
+    {
+      "id": "cert-2",
+      "title": "Generative AI Fundamentals",
+      "issuer": "Google Cloud",
+      "date": "2024",
+      "link": "https://github.com/savani-jaswanth"
+    },
+    {
+      "id": "cert-3",
+      "title": "Prompt Engineering Certification",
+      "issuer": "DeepLearning.AI",
+      "date": "2024",
+      "link": "https://github.com/savani-jaswanth"
+    }
+  ],
+  "stats": {
+    "githubUsername": "savani-jaswanth",
+    "contributions": "500+ Commits this year",
+    "reposCount": 24,
+    "followers": 12
+  },
+  "theme": {
+    "accentColor": "#3b82f6",
+    "glassIntensity": "medium",
+    "animationSpeed": "normal"
+  }
+}
