@@ -329,11 +329,18 @@ app.get("/api/portfolio", (req, res) => {
 app.post("/api/portfolio", (req, res) => {
   portfolioData = req.body;
   const success = savePortfolioData(portfolioData);
-  if (success) {
-    // Flush and rebuild memory caches
-    rebuildFaqCache();
-    queryCache.clear();
-    res.json({ success: true, message: "Portfolio successfully updated!" });
+  
+  // Rebuild cache in memory regardless of disk persistence success
+  rebuildFaqCache();
+  queryCache.clear();
+  
+  if (success || process.env.VERCEL) {
+    res.json({ 
+      success: true, 
+      message: success 
+        ? "Portfolio successfully updated!" 
+        : "Portfolio updated in memory (running on read-only serverless environment)." 
+    });
   } else {
     res.status(500).json({ success: false, message: "Failed to persist portfolio data on disk." });
   }
@@ -375,7 +382,16 @@ app.post("/api/contact", (req, res) => {
       contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE, "utf-8"));
     }
     contacts.unshift(newContact);
-    fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), "utf-8");
+    
+    try {
+      fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), "utf-8");
+    } catch (writeErr) {
+      console.warn("Could not save contact backup on disk (read-only filesystem):", writeErr);
+      if (!process.env.VERCEL) {
+        throw writeErr;
+      }
+    }
+    
     res.json({ success: true, message: "Message received! Thank you for connecting." });
   } catch (e) {
     console.error("Error saving contact", e);
@@ -596,6 +612,11 @@ Strict Guidelines:
 // ---------------------- Vite & Static Asset Handling ----------------------
 
 async function start() {
+  if (process.env.VERCEL) {
+    console.log("Running in Vercel serverless environment. Port listening skipped.");
+    return;
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -621,3 +642,5 @@ async function start() {
 start().catch((err) => {
   console.error("Error starting server", err);
 });
+
+export default app;
