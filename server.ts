@@ -12,6 +12,15 @@ const hasImportMeta = typeof import.meta !== "undefined" && import.meta.url;
 const currentFilename = hasImportMeta ? fileURLToPath(import.meta.url) : (typeof __filename !== "undefined" ? __filename : "");
 const currentDirname = hasImportMeta ? path.dirname(currentFilename) : (typeof __dirname !== "undefined" ? __dirname : "");
 
+function isServerless(): boolean {
+  return !!(
+    process.env.VERCEL ||
+    process.env.NOW_REGION ||
+    process.env.LAMBDA_TASK_ROOT ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME
+  );
+}
+
 const app = express();
 const PORT = 3000;
 
@@ -334,7 +343,7 @@ app.post("/api/portfolio", (req, res) => {
   rebuildFaqCache();
   queryCache.clear();
   
-  if (success || process.env.VERCEL) {
+  if (success || isServerless()) {
     res.json({ 
       success: true, 
       message: success 
@@ -387,7 +396,7 @@ app.post("/api/contact", (req, res) => {
       fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), "utf-8");
     } catch (writeErr) {
       console.warn("Could not save contact backup on disk (read-only filesystem):", writeErr);
-      if (!process.env.VERCEL) {
+      if (!isServerless()) {
         throw writeErr;
       }
     }
@@ -637,8 +646,8 @@ app.post("/api/upload", (req, res) => {
 // ---------------------- Vite & Static Asset Handling ----------------------
 
 async function start() {
-  if (process.env.VERCEL) {
-    console.log("Running in Vercel serverless environment. Port listening skipped.");
+  if (isServerless()) {
+    console.log("Running in serverless environment. Port listening skipped.");
     return;
   }
 

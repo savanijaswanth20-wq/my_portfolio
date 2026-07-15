@@ -10,7 +10,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import AIAssistant from "./components/AIAssistant";
 import ResumeAnalyzer from "./components/ResumeAnalyzer";
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
-import { isSupabaseEmpty as isFirestoreEmpty, seedSupabase as seedFirestore, subscribeToPortfolio, submitContactMessage } from "./lib/supabaseService";
+import { isSupabaseEmpty, seedSupabase, subscribeToPortfolio, submitContactMessage } from "./lib/supabaseService";
 
 const getResumeFileName = (url: string) => {
   if (url.includes("wordprocessingml") || url.includes("msword") || url.toLowerCase().endsWith(".docx") || url.toLowerCase().endsWith(".doc")) {
@@ -42,19 +42,19 @@ export default function App() {
   // Mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Load portfolio settings from Firebase Real-time Subscription with seeding
+  // Load portfolio settings from database subscription with seeding
   useEffect(() => {
     async function initFirebaseDb() {
       try {
-        const isEmpty = await isFirestoreEmpty();
+        const isEmpty = await isSupabaseEmpty();
         if (isEmpty) {
-          console.log("Firebase database is empty, fetching fallback data to seed...");
+          console.log("Database is empty, fetching fallback data to seed...");
           const fallbackRes = await fetch("/api/portfolio");
           const fallbackData = await fallbackRes.json();
-          await seedFirestore(fallbackData);
+          await seedSupabase(fallbackData);
         }
       } catch (err) {
-        console.error("Firebase pre-check failed:", err);
+        console.error("Database pre-check failed:", err);
       } finally {
         const unsubscribe = subscribeToPortfolio((data) => {
           setPortfolio(data);
@@ -120,7 +120,7 @@ export default function App() {
 
     try {
       await submitContactMessage(contactForm);
-      setContactSuccess("Your message was dispatched successfully to Firestore! I will reach out shortly.");
+      setContactSuccess("Your message was dispatched successfully! I will reach out shortly.");
       setContactForm({ name: "", email: "", company: "", message: "" });
     } catch (err: any) {
       setContactError(err.message || "Something went wrong. Please email directly.");

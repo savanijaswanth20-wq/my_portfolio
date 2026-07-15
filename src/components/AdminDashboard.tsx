@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { PortfolioData, ProjectData, SkillCategory, TimelineEvent, CertificateData, ContactMessage } from "../types";
 import { supabase } from "../lib/supabaseClient";
-import { updateSupabasePortfolio as updateFirestorePortfolio, subscribeToContactMessages, uploadFileToStorage } from "../lib/supabaseService";
+import { updateSupabasePortfolio, subscribeToContactMessages, uploadFileToStorage } from "../lib/supabaseService";
 
 interface AdminDashboardProps {
   portfolio: PortfolioData;
@@ -60,7 +60,7 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load submissions from Firestore in real-time
+  // Load submissions from database in real-time
   useEffect(() => {
     if (isAuthenticated && currentUser) {
       setLoadingMessages(true);
@@ -273,11 +273,11 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateFirestorePortfolio(tempPortfolio);
+      await updateSupabasePortfolio(tempPortfolio);
       onUpdate(tempPortfolio);
-      alert("Portfolio data successfully synchronized and persisted on Firestore!");
+      alert("Portfolio data successfully synchronized and persisted in database!");
     } catch (err: any) {
-      alert("Error saving data to Firestore: " + err.message);
+      alert("Error saving data to database: " + err.message);
     } finally {
       setSaving(false);
     }
@@ -479,7 +479,7 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
                   onClick={async () => {
                     setIsAuthenticated(true);
                     setError("");
-                    // Attempt background Auth session initialization so Firestore writes succeed
+                    // Attempt background Auth session initialization so writes succeed
                     const bypassEmail = "bypass_admin@savani.com";
                     const bypassPassword = "bypass_password_6304702907";
                     try {
