@@ -18,8 +18,8 @@ const PORT = 3000;
 app.use(express.json({ limit: "10mb" }));
 
 // Persistent files paths
-const DATA_FILE = path.join(currentDirname, "portfolio-data.json");
-const CONTACTS_FILE = path.join(currentDirname, "contacts.json");
+const DATA_FILE = path.join(process.cwd(), "portfolio-data.json");
+const CONTACTS_FILE = path.join(process.cwd(), "contacts.json");
 
 // Default Portfolio Data for Savani Jaswanth
 const DEFAULT_PORTFOLIO_DATA = {
@@ -609,6 +609,31 @@ Strict Guidelines:
   }
 });
 
+// Local File Uploads (fallback for resume/asset uploading in local mode)
+app.post("/api/upload", (req, res) => {
+  const { fileName, fileData } = req.body;
+  if (!fileName || !fileData) {
+    return res.status(400).json({ success: false, message: "Missing fileName or fileData." });
+  }
+
+  try {
+    const buffer = Buffer.from(fileData, "base64");
+    const uploadDir = path.join(process.cwd(), "public");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+
+    const fileUrl = `/${fileName}`;
+    console.log(`[Upload] File saved successfully to ${filePath}`);
+    res.json({ success: true, fileUrl });
+  } catch (error: any) {
+    console.error("Local upload error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ---------------------- Vite & Static Asset Handling ----------------------
 
 async function start() {
@@ -616,6 +641,9 @@ async function start() {
     console.log("Running in Vercel serverless environment. Port listening skipped.");
     return;
   }
+
+  // Serve public folder statically (for uploads like resumes)
+  app.use(express.static(path.join(process.cwd(), "public")));
 
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");

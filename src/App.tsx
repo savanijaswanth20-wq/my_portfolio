@@ -12,6 +12,13 @@ import ResumeAnalyzer from "./components/ResumeAnalyzer";
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
 import { isSupabaseEmpty as isFirestoreEmpty, seedSupabase as seedFirestore, subscribeToPortfolio, submitContactMessage } from "./lib/supabaseService";
 
+const getResumeFileName = (url: string) => {
+  if (url.includes("wordprocessingml") || url.includes("msword") || url.toLowerCase().endsWith(".docx") || url.toLowerCase().endsWith(".doc")) {
+    return "Resume.docx";
+  }
+  return "Resume.pdf";
+};
+
 export default function App() {
   // Master Portfolio Data State
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
@@ -237,7 +244,7 @@ export default function App() {
               {portfolio.hero.resumeUrl && (
                 <a 
                   href={portfolio.hero.resumeUrl}
-                  download={portfolio.hero.resumeUrl.startsWith("data:") ? "Resume.pdf" : undefined}
+                  download={portfolio.hero.resumeUrl.startsWith("data:") || portfolio.hero.resumeUrl.startsWith("/") || portfolio.hero.resumeUrl.includes("localhost") ? getResumeFileName(portfolio.hero.resumeUrl) : undefined}
                   target="_blank"
                   referrerPolicy="no-referrer"
                   className="px-5 py-2.5 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-white transition flex items-center gap-1.5"

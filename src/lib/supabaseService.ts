@@ -28,6 +28,19 @@ export interface SupabaseErrorInfo {
   }
 }
 
+// Check if Supabase env variables are configured with actual keys (not default placeholders)
+export function isSupabaseConfigured(): boolean {
+  const metaEnv = (import.meta as any).env || {};
+  const url = metaEnv.VITE_SUPABASE_URL;
+  const key = metaEnv.VITE_SUPABASE_ANON_KEY;
+  return (
+    !!url &&
+    url !== "https://your-supabase-project.supabase.co" &&
+    !!key &&
+    key !== "your-anon-key"
+  );
+}
+
 export async function handleSupabaseError(error: unknown, operationType: OperationType, path: string | null): Promise<never> {
   const session = (await supabase.auth.getSession()).data.session;
   const errInfo: SupabaseErrorInfo = {
@@ -45,6 +58,10 @@ export async function handleSupabaseError(error: unknown, operationType: Operati
 
 // Check if Supabase has existing portfolio data
 export async function isSupabaseEmpty(): Promise<boolean> {
+  if (!isSupabaseConfigured()) {
+    return false; // In local mode, bypass database check
+  }
+
   try {
     const { data, error } = await supabase
       .from("profile")
@@ -65,6 +82,10 @@ export async function isSupabaseEmpty(): Promise<boolean> {
 
 // Seed Supabase with local JSON portfolio data
 export async function seedSupabase(data: PortfolioData): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    return; // Bypass database seeding in local mode
+  }
+
   try {
     console.log("Seeding Supabase with default portfolio data...");
 
@@ -133,15 +154,53 @@ export async function seedSupabase(data: PortfolioData): Promise<void> {
 
 // Helper to fetch complete portfolio details from Supabase
 export async function fetchPortfolioData(): Promise<PortfolioData> {
-  let cachedHero = { name: "SAVVANI VENKATA JASWANTH", roles: ["Developer"], avatarUrl: "", badge: "", resumeUrl: "", aboutBrief: "" };
-  let cachedVideo = { url: "", title: "", description: "" };
-  let cachedStats = { githubUsername: "savani-jaswanth", contributions: "", reposCount: 0, followers: 0 };
-  let cachedStory = "";
-  let cachedTimeline: TimelineEvent[] = [];
-  let cachedCategories: SkillCategory[] = [];
-  let cachedProjects: ProjectData[] = [];
-  let cachedCertificates: CertificateData[] = [];
-  let cachedTheme: ThemeSettings = { accentColor: "#ef4444", glassIntensity: "medium", animationSpeed: "normal" };
+  const cachedHero = { name: "SAVVANI VENKATA JASWANTH", roles: ["Python Developer", "AI Developer"], avatarUrl: "", badge: "Available for Internship & Full-Time", resumeUrl: "", aboutBrief: "" };
+  const cachedVideo = { url: "", title: "", description: "" };
+  const cachedStats = { githubUsername: "savani-jaswanth", contributions: "", reposCount: 0, followers: 0 };
+  const cachedStory = "";
+  const cachedTimeline: TimelineEvent[] = [];
+  const cachedCategories: SkillCategory[] = [];
+  const cachedProjects: ProjectData[] = [];
+  const cachedCertificates: CertificateData[] = [];
+  const cachedTheme: ThemeSettings = { accentColor: "#3b82f6", glassIntensity: "medium", animationSpeed: "normal" };
+
+  // Fallback to Express backend locally if Supabase is not configured
+  if (!isSupabaseConfigured()) {
+    try {
+      const res = await fetch("/api/portfolio");
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.error("Error fetching local portfolio data:", err);
+    }
+    return {
+      hero: cachedHero,
+      video: cachedVideo,
+      about: {
+        story: cachedStory,
+        timeline: cachedTimeline
+      },
+      skills: {
+        categories: cachedCategories
+      },
+      projects: cachedProjects,
+      certificates: cachedCertificates,
+      stats: cachedStats,
+      theme: cachedTheme
+    };
+  }
+
+  // Supabase Fetch Logic
+  let hero = { ...cachedHero };
+  let video = { ...cachedVideo };
+  let stats = { ...cachedStats };
+  let story = cachedStory;
+  let timeline = [...cachedTimeline];
+  let categories = [...cachedCategories];
+  let projects = [...cachedProjects];
+  let certificates = [...cachedCertificates];
+  let theme = { ...cachedTheme };
 
   try {
     const [
@@ -165,21 +224,21 @@ export async function fetchPortfolioData(): Promise<PortfolioData> {
     if (profileRes.data) {
       const info = profileRes.data.find(d => d.id === "info");
       if (info) {
-        if (info.hero) cachedHero = info.hero;
-        if (info.video) cachedVideo = info.video;
-        if (info.stats) cachedStats = info.stats;
+        if (info.hero) hero = info.hero;
+        if (info.video) video = info.video;
+        if (info.stats) stats = info.stats;
       }
     }
 
     if (storyRes.data) {
       const storyObj = storyRes.data.find(d => d.id === "story");
-      if (storyObj) cachedStory = storyObj.story || "";
+      if (storyObj) story = storyObj.story || "";
     }
 
     if (settingsRes.data) {
       const themeObj = settingsRes.data.find(d => d.id === "theme");
       if (themeObj) {
-        cachedTheme = {
+        theme = {
           accentColor: themeObj.accentColor || "#ef4444",
           glassIntensity: themeObj.glassIntensity || "medium",
           animationSpeed: themeObj.animationSpeed || "normal"
@@ -188,46 +247,62 @@ export async function fetchPortfolioData(): Promise<PortfolioData> {
     }
 
     if (projectsRes.data) {
-      cachedProjects = projectsRes.data as ProjectData[];
+      projects = projectsRes.data as ProjectData[];
     }
 
     if (skillsRes.data) {
-      cachedCategories = skillsRes.data.map(d => ({
+      categories = skillsRes.data.map(d => ({
         name: d.name,
         items: Array.isArray(d.items) ? d.items : []
       })) as SkillCategory[];
     }
 
     if (experienceRes.data) {
-      cachedTimeline = (experienceRes.data as TimelineEvent[]).sort((a, b) => b.year.localeCompare(a.year));
+      timeline = (experienceRes.data as TimelineEvent[]).sort((a, b) => b.year.localeCompare(a.year));
     }
 
     if (certificatesRes.data) {
-      cachedCertificates = certificatesRes.data as CertificateData[];
+      certificates = certificatesRes.data as CertificateData[];
     }
   } catch (err) {
     console.error("Error fetching portfolio from Supabase:", err);
   }
 
   return {
-    hero: cachedHero,
-    video: cachedVideo,
+    hero,
+    video,
     about: {
-      story: cachedStory,
-      timeline: cachedTimeline
+      story,
+      timeline
     },
     skills: {
-      categories: cachedCategories
+      categories
     },
-    projects: cachedProjects,
-    certificates: cachedCertificates,
-    stats: cachedStats,
-    theme: cachedTheme
+    projects,
+    certificates,
+    stats,
+    theme
   };
 }
 
 // Subscribe to real-time updates for all core portfolio tables
 export function subscribeToPortfolio(onUpdate: (data: PortfolioData) => void): () => void {
+  // Local fallback event-driven updates
+  if (!isSupabaseConfigured()) {
+    fetchPortfolioData().then(onUpdate);
+
+    const handleLocalUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<PortfolioData>;
+      onUpdate(customEvent.detail);
+    };
+
+    window.addEventListener("portfolio-local-update", handleLocalUpdate);
+
+    return () => {
+      window.removeEventListener("portfolio-local-update", handleLocalUpdate);
+    };
+  }
+
   // Initial load
   fetchPortfolioData().then(onUpdate);
 
@@ -254,6 +329,27 @@ export function subscribeToPortfolio(onUpdate: (data: PortfolioData) => void): (
 
 // Push local edits from Admin Dashboard directly to Supabase
 export async function updateSupabasePortfolio(data: PortfolioData): Promise<void> {
+  // Local fallback: Save to file on Express backend
+  if (!isSupabaseConfigured()) {
+    try {
+      const response = await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error("Failed to save local portfolio data");
+      }
+      // Notify active pages of local update
+      window.dispatchEvent(new CustomEvent("portfolio-local-update", { detail: data }));
+    } catch (error) {
+      console.error("Error updating local portfolio:", error);
+      throw error;
+    }
+    return;
+  }
+
+  // Supabase save
   try {
     // 1. Update profile
     await supabase.from("profile").upsert({
@@ -320,6 +416,13 @@ export async function updateSupabasePortfolio(data: PortfolioData): Promise<void
 
 // Manage Individual items
 export async function deleteSupabaseProject(projectId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const current = await fetchPortfolioData();
+    current.projects = current.projects.filter(p => p.id !== projectId);
+    await updateSupabasePortfolio(current);
+    return;
+  }
+
   try {
     const { error } = await supabase.from("projects").delete().eq("id", projectId);
     if (error) throw error;
@@ -329,6 +432,13 @@ export async function deleteSupabaseProject(projectId: string): Promise<void> {
 }
 
 export async function deleteSupabaseCertificate(certId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const current = await fetchPortfolioData();
+    current.certificates = current.certificates.filter(c => c.id !== certId);
+    await updateSupabasePortfolio(current);
+    return;
+  }
+
   try {
     const { error } = await supabase.from("certificates").delete().eq("id", certId);
     if (error) throw error;
@@ -338,6 +448,13 @@ export async function deleteSupabaseCertificate(certId: string): Promise<void> {
 }
 
 export async function deleteSupabaseExperience(eventId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const current = await fetchPortfolioData();
+    current.about.timeline = current.about.timeline.filter(e => e.id !== eventId);
+    await updateSupabasePortfolio(current);
+    return;
+  }
+
   try {
     const { error } = await supabase.from("experience").delete().eq("id", eventId);
     if (error) throw error;
@@ -348,6 +465,18 @@ export async function deleteSupabaseExperience(eventId: string): Promise<void> {
 
 // Contact messages subroutines
 export async function submitContactMessage(msg: Omit<ContactMessage, "id" | "timestamp">): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(msg)
+    });
+    if (!response.ok) {
+      throw new Error("Failed to send message locally.");
+    }
+    return;
+  }
+
   const messageData = {
     id: `contact-${Date.now()}`,
     name: msg.name,
@@ -382,6 +511,23 @@ export async function submitContactMessage(msg: Omit<ContactMessage, "id" | "tim
 }
 
 export function subscribeToContactMessages(onUpdate: (messages: ContactMessage[]) => void): () => void {
+  if (!isSupabaseConfigured()) {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch("/api/contacts");
+        if (res.ok) {
+          onUpdate(await res.json());
+        }
+      } catch (err) {
+        console.error("Error fetching local contacts:", err);
+      }
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }
+
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from("contact_messages")
@@ -413,10 +559,46 @@ export function subscribeToContactMessages(onUpdate: (messages: ContactMessage[]
   };
 }
 
-// Upload file to Supabase storage bucket
+// Upload file to Supabase storage bucket (or local filesystem in local mode)
 export async function uploadFileToStorage(file: File, path: string): Promise<string> {
+  // Local File Upload Fallback
+  if (!isSupabaseConfigured()) {
+    try {
+      const reader = new FileReader();
+      const base64DataPromise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(",")[1];
+          resolve(base64);
+        };
+        reader.onerror = (err) => reject(err);
+      });
+      reader.readAsDataURL(file);
+      const fileData = await base64DataPromise;
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: `${Date.now()}_${file.name}`,
+          fileData: fileData
+        })
+      });
+
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || "Failed to upload file locally");
+      }
+
+      return resData.fileUrl;
+    } catch (error) {
+      console.error("Local file upload fallback failed:", error);
+      throw error;
+    }
+  }
+
+  // Supabase Upload
   try {
-    // We'll upload to a bucket named 'portfolio-assets'
     const bucketName = "portfolio-assets";
     const { data, error } = await supabase.storage
       .from(bucketName)
