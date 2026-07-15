@@ -236,17 +236,14 @@ export default function App() {
               <span className="font-mono text-[11px] tracking-wide uppercase">{portfolio.hero.badge}</span>
             </div>
 
-            {/* Name + Typewriter role */}
+            {/* Typewriter role */}
             <div className="space-y-1">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight font-display text-white">
-                Hi, I'm {portfolio.hero.name}.
-              </h1>
-              <span 
-                className="block text-xl sm:text-2xl lg:text-3xl font-bold font-mono"
+              <h1
+                className="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono"
                 style={{ color: accentColor }}
               >
                 {typedText}<span className="animate-pulse">|</span>
-              </span>
+              </h1>
             </div>
 
             <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 font-sans">
