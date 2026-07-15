@@ -409,8 +409,26 @@ export async function updateSupabasePortfolio(data: PortfolioData): Promise<void
     }
 
   } catch (error) {
-    console.error("Error writing updates to Supabase:", error);
-    await handleSupabaseError(error, OperationType.WRITE, "portfolio_update");
+    console.warn("Error writing updates to Supabase. Attempting local backend fallback...", error);
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("portfolio_local_data", JSON.stringify(data));
+      }
+      const response = await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error("Failed to save local portfolio data");
+      }
+      window.dispatchEvent(new CustomEvent("portfolio-local-update", { detail: data }));
+      console.log("Local fallback save successful!");
+      return;
+    } catch (fallbackErr) {
+      console.error("Local fallback save also failed:", fallbackErr);
+      await handleSupabaseError(error, OperationType.WRITE, "portfolio_update");
+    }
   }
 
   // Also notify server to rebuild memory caches so AI Assistant is immediately aware
