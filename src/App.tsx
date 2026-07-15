@@ -225,36 +225,36 @@ export default function App() {
       )}
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center pt-24 px-6 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full z-10">
+      <section className="flex items-center justify-center pt-16 pb-12 sm:pt-20 sm:pb-16 px-6 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full z-10">
           
-          {/* Hero Left Content */}
-          <div className="lg:col-span-7 space-y-6 text-left">
+          {/* Hero Left Content - order-2 on mobile so avatar appears first */}
+          <div className="lg:col-span-7 space-y-5 text-center lg:text-left order-2 lg:order-1">
             {/* Status Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-white">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
               <span className="font-mono text-[11px] tracking-wide uppercase">{portfolio.hero.badge}</span>
             </div>
 
-            {/* Dynamic Typewriter Name and Roles */}
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-display text-white">
-                <span 
-                  className="block text-2xl sm:text-3xl lg:text-4xl font-bold mt-2 font-mono"
-                  style={{ color: accentColor }}
-                >
-                  {typedText}
-                  <span className="animate-pulse">|</span>
-                </span>
+            {/* Name + Typewriter role */}
+            <div className="space-y-1">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight font-display text-white">
+                Hi, I'm {portfolio.hero.name}.
               </h1>
+              <span 
+                className="block text-xl sm:text-2xl lg:text-3xl font-bold font-mono"
+                style={{ color: accentColor }}
+              >
+                {typedText}<span className="animate-pulse">|</span>
+              </span>
             </div>
 
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-xl font-sans">
+            <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 font-sans">
               {portfolio.hero.aboutBrief}
             </p>
 
-            {/* Actions */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* CTA buttons - centered on mobile, left on desktop */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
               <a 
                 href="#projects"
                 style={{ backgroundColor: accentColor }}
@@ -286,9 +286,9 @@ export default function App() {
             </div>
           </div>
 
-          {/* Hero Right Avatar Frame */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="relative w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 group">
+          {/* Hero Right Avatar Frame - order-1 on mobile so it shows above text */}
+          <div className="lg:col-span-5 flex justify-center order-1 lg:order-2">
+            <div className="relative w-44 h-44 sm:w-60 sm:h-60 lg:w-72 lg:h-72 group">
               {/* Outer decorative orbital rings */}
               <div 
                 className="absolute inset-0 rounded-full border border-dashed animate-spin-slow opacity-20 pointer-events-none"
@@ -323,8 +323,8 @@ export default function App() {
 
         </div>
 
-        {/* Scroll helper */}
-        <div className="absolute bottom-6 inset-x-0 flex flex-col items-center justify-center text-gray-500 text-[10px] font-mono animate-bounce pointer-events-none">
+        {/* Scroll helper - hidden on mobile to save space */}
+        <div className="hidden sm:flex absolute bottom-4 inset-x-0 flex-col items-center justify-center text-gray-500 text-[10px] font-mono animate-bounce pointer-events-none">
           <span>SCROLL TO DISCOVER</span>
           <ChevronDown className="w-4 h-4 mt-1" />
         </div>
