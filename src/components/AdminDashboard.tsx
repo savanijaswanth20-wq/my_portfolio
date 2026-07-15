@@ -5,9 +5,8 @@ import {
   Mail, Phone, Send, Sparkles, UploadCloud, LogOut
 } from "lucide-react";
 import { PortfolioData, ProjectData, SkillCategory, TimelineEvent, CertificateData, ContactMessage } from "../types";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "../lib/firebase";
-import { updateFirestorePortfolio, subscribeToContactMessages } from "../lib/firebaseService";
+import { supabase } from "../lib/supabaseClient";
+import { updateSupabasePortfolio as updateFirestorePortfolio, subscribeToContactMessages, uploadFileToStorage } from "../lib/supabaseService";
 
 interface AdminDashboardProps {
   portfolio: PortfolioData;
@@ -32,22 +31,38 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
 
-  // Check and listen to Firebase Authentication session state
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Check and listen to Supabase Authentication session state
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
         setIsAuthenticated(true);
+        setCurrentUser(session.user);
       } else {
         setIsAuthenticated(false);
+        setCurrentUser(null);
       }
     });
-    return unsubscribe;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setIsAuthenticated(true);
+        setCurrentUser(session.user);
+      } else {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   // Load submissions from Firestore in real-time
   useEffect(() => {
-    if (isAuthenticated && auth.currentUser) {
+    if (isAuthenticated && currentUser) {
       setLoadingMessages(true);
       const unsubscribe = subscribeToContactMessages((data) => {
         setMessages(data);
@@ -71,7 +86,7 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
           setLoadingMessages(false);
         });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentUser]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,9 +162,15 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
           for (const currentPassword of passwordsToTry) {
             try {
               if (currentPassword.length >= 6) {
-                const cred = await createUserWithEmailAndPassword(auth, currentEmail, currentPassword);
-                authenticatedUser = cred.user;
-                break;
+                const { data, error: signUpErr } = await supabase.auth.signUp({
+                  email: currentEmail,
+                  password: currentPassword
+                });
+                if (signUpErr) throw signUpErr;
+                if (data.user) {
+                  authenticatedUser = data.user;
+                  break;
+                }
               }
             } catch (err: any) {
               lastError = err;
@@ -162,9 +183,15 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
         for (const currentEmail of emailsToTry) {
           for (const currentPassword of passwordsToTry) {
             try {
-              const cred = await signInWithEmailAndPassword(auth, currentEmail, currentPassword);
-              authenticatedUser = cred.user;
-              break;
+              const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+                email: currentEmail,
+                password: currentPassword
+              });
+              if (signInErr) throw signInErr;
+              if (data.user) {
+                authenticatedUser = data.user;
+                break;
+              }
             } catch (err: any) {
               lastError = err;
             }
@@ -180,9 +207,15 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
             for (const currentPassword of passwordsToTry) {
               try {
                 if (currentPassword.length >= 6) {
-                  const cred = await createUserWithEmailAndPassword(auth, currentEmail, currentPassword);
-                  authenticatedUser = cred.user;
-                  break;
+                  const { data, error: signUpErr } = await supabase.auth.signUp({
+                    email: currentEmail,
+                    password: currentPassword
+                  });
+                  if (signUpErr) throw signUpErr;
+                  if (data.user) {
+                    authenticatedUser = data.user;
+                    break;
+                  }
                 }
               } catch (err: any) {
                 lastError = err;
@@ -198,9 +231,15 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
           for (const currentPassword of passwordsToTry) {
             try {
               if (currentPassword.length >= 6) {
-                const cred = await createUserWithEmailAndPassword(auth, uniqueFallbackEmail, currentPassword);
-                authenticatedUser = cred.user;
-                break;
+                const { data, error: signUpErr } = await supabase.auth.signUp({
+                  email: uniqueFallbackEmail,
+                  password: currentPassword
+                });
+                if (signUpErr) throw signUpErr;
+                if (data.user) {
+                  authenticatedUser = data.user;
+                  break;
+                }
               }
             } catch (err: any) {
               lastError = err;
@@ -227,7 +266,7 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
   };
 
@@ -444,10 +483,10 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
                     const bypassEmail = "bypass_admin@savani.com";
                     const bypassPassword = "bypass_password_6304702907";
                     try {
-                      await signInWithEmailAndPassword(auth, bypassEmail, bypassPassword);
+                      await supabase.auth.signInWithPassword({ email: bypassEmail, password: bypassPassword });
                     } catch (err) {
                       try {
-                        await createUserWithEmailAndPassword(auth, bypassEmail, bypassPassword);
+                        await supabase.auth.signUp({ email: bypassEmail, password: bypassPassword });
                       } catch (regErr) {
                         // Suppress background errors as they are non-blocking for local bypass
                       }
@@ -625,26 +664,43 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
                       />
                     </div>
                     <div className="flex-1 space-y-1.5">
-                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white cursor-pointer transition border border-white/15">
-                        <UploadCloud className="w-3.5 h-3.5" />
-                        <span>Choose Photo</span>
+                      <label className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white cursor-pointer transition border border-white/15 ${isUploadingAvatar ? "opacity-50 pointer-events-none" : ""}`}>
+                        {isUploadingAvatar ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                        ) : (
+                          <UploadCloud className="w-3.5 h-3.5" />
+                        )}
+                        <span>{isUploadingAvatar ? "Uploading to Cloud..." : "Choose Photo"}</span>
                         <input
                           type="file"
                           accept="image/*"
+                          disabled={isUploadingAvatar}
                           className="hidden"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                if (typeof reader.result === "string") {
-                                  setTempPortfolio({
-                                    ...tempPortfolio,
-                                    hero: { ...tempPortfolio.hero, avatarUrl: reader.result }
-                                  });
-                                }
-                              };
-                              reader.readAsDataURL(file);
+                              setIsUploadingAvatar(true);
+                              try {
+                                const url = await uploadFileToStorage(file, `avatar/${Date.now()}_${file.name}`);
+                                setTempPortfolio(prev => ({
+                                  ...prev,
+                                  hero: { ...prev.hero, avatarUrl: url }
+                                }));
+                              } catch (err) {
+                                console.warn("Firebase Storage failed, falling back to base64 encoding:", err);
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  if (typeof reader.result === "string") {
+                                    setTempPortfolio(prev => ({
+                                      ...prev,
+                                      hero: { ...prev.hero, avatarUrl: reader.result as string }
+                                    }));
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              } finally {
+                                setIsUploadingAvatar(false);
+                              }
                             }
                           }}
                         />
@@ -659,35 +715,52 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
                   <div className="space-y-3">
                     <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-3">
                       <div className="flex-1 space-y-1.5">
-                        <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white cursor-pointer transition border border-white/15">
-                          <UploadCloud className="w-3.5 h-3.5" />
-                          <span>Upload PDF / DOCX</span>
+                        <label className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white cursor-pointer transition border border-white/15 ${isUploadingResume ? "opacity-50 pointer-events-none" : ""}`}>
+                          {isUploadingResume ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                          ) : (
+                            <UploadCloud className="w-3.5 h-3.5" />
+                          )}
+                          <span>{isUploadingResume ? "Uploading to Cloud..." : "Upload PDF / DOCX"}</span>
                           <input
                             type="file"
                             accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            disabled={isUploadingResume}
                             className="hidden"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  if (typeof reader.result === "string") {
-                                    setTempPortfolio({
-                                      ...tempPortfolio,
-                                      hero: { ...tempPortfolio.hero, resumeUrl: reader.result }
-                                    });
-                                  }
-                                };
-                                reader.readAsDataURL(file);
+                                setIsUploadingResume(true);
+                                try {
+                                  const url = await uploadFileToStorage(file, `resumes/${Date.now()}_${file.name}`);
+                                  setTempPortfolio(prev => ({
+                                    ...prev,
+                                    hero: { ...prev.hero, resumeUrl: url }
+                                  }));
+                                } catch (err) {
+                                  console.warn("Firebase Storage failed, falling back to base64 encoding:", err);
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    if (typeof reader.result === "string") {
+                                      setTempPortfolio(prev => ({
+                                        ...prev,
+                                        hero: { ...prev.hero, resumeUrl: reader.result as string }
+                                      }));
+                                    }
+                                  };
+                                  reader.readAsDataURL(file);
+                                } finally {
+                                  setIsUploadingResume(false);
+                                }
                               }
                             }}
                           />
                         </label>
                         <p className="text-[9px] text-gray-500 font-mono">Supports PDF, DOC, DOCX</p>
                       </div>
-                      {tempPortfolio.hero.resumeUrl && tempPortfolio.hero.resumeUrl.startsWith("data:") && (
+                      {tempPortfolio.hero.resumeUrl && (tempPortfolio.hero.resumeUrl.startsWith("data:") || tempPortfolio.hero.resumeUrl.startsWith("http")) && (
                         <div className="text-[10px] font-mono text-green-400 bg-green-400/10 px-2 py-1 rounded border border-green-500/20">
-                          File Uploaded
+                          {tempPortfolio.hero.resumeUrl.startsWith("data:") ? "Local File Cached" : "Uploaded to Cloud"}
                         </div>
                       )}
                     </div>

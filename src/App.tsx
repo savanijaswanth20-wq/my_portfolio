@@ -10,7 +10,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import AIAssistant from "./components/AIAssistant";
 import ResumeAnalyzer from "./components/ResumeAnalyzer";
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
-import { isFirestoreEmpty, seedFirestore, subscribeToPortfolio, submitContactMessage } from "./lib/firebaseService";
+import { isSupabaseEmpty as isFirestoreEmpty, seedSupabase as seedFirestore, subscribeToPortfolio, submitContactMessage } from "./lib/supabaseService";
 
 export default function App() {
   // Master Portfolio Data State
