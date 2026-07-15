@@ -3,14 +3,14 @@ import {
   ArrowRight, Download, Eye, ExternalLink, Github, Linkedin, 
   Mail, MessageSquare, MapPin, Play, Pause, ChevronDown, 
   Cpu, FileText, Settings, Award, Terminal, CheckCircle2, Send, 
-  Sparkles, Check, Menu, X, Code, Phone, Compass
+  Sparkles, Check, Menu, X, Code, Phone, Compass, UploadCloud
 } from "lucide-react";
 import ParticleBackground from "./components/ParticleBackground";
 import AdminDashboard from "./components/AdminDashboard";
 import AIAssistant from "./components/AIAssistant";
 import ResumeAnalyzer from "./components/ResumeAnalyzer";
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
-import { isSupabaseEmpty, seedSupabase, subscribeToPortfolio, submitContactMessage } from "./lib/supabaseService";
+import { isSupabaseEmpty, seedSupabase, subscribeToPortfolio, submitContactMessage, uploadFileToStorage } from "./lib/supabaseService";
 
 const getResumeFileName = (url: string) => {
   if (url.includes("wordprocessingml") || url.includes("msword") || url.toLowerCase().endsWith(".docx") || url.toLowerCase().endsWith(".doc")) {
@@ -32,6 +32,8 @@ export default function App() {
 
   // Contact Form State
   const [contactForm, setContactForm] = useState({ name: "", email: "", company: "", message: "" });
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const [submittingContact, setSubmittingContact] = useState(false);
   const [contactSuccess, setContactSuccess] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
@@ -118,10 +120,31 @@ export default function App() {
     setContactSuccess(null);
     setContactError(null);
 
+    let finalForm = { ...contactForm };
+    if (attachmentFile) {
+      setIsUploadingAttachment(true);
+      try {
+        const attachmentUrl = await uploadFileToStorage(
+          attachmentFile,
+          `attachments/${Date.now()}_${attachmentFile.name}`
+        );
+        finalForm.message = `${finalForm.message}\n\n📎 **Attachment:** [${attachmentFile.name}](${attachmentUrl})`;
+      } catch (uploadErr: any) {
+        console.error("Failed to upload attachment:", uploadErr);
+        setContactError("Failed to upload the attachment. You can send the message without the attachment or try again.");
+        setSubmittingContact(false);
+        setIsUploadingAttachment(false);
+        return;
+      } finally {
+        setIsUploadingAttachment(false);
+      }
+    }
+
     try {
-      await submitContactMessage(contactForm);
+      await submitContactMessage(finalForm);
       setContactSuccess("Your message was dispatched successfully! I will reach out shortly.");
       setContactForm({ name: "", email: "", company: "", message: "" });
+      setAttachmentFile(null);
     } catch (err: any) {
       setContactError(err.message || "Something went wrong. Please email directly.");
     } finally {
@@ -626,6 +649,37 @@ export default function App() {
                     rows={5}
                     className="w-full bg-[#080808] border border-white/10 rounded-lg p-3.5 text-xs text-gray-300 focus:outline-none focus:border-white/20"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono text-gray-400 mb-1.5">Attach Document / Requirement (Optional)</label>
+                  <div className="flex items-center gap-3">
+                    <label className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-[#080808] border border-white/10 hover:border-white/20 text-xs font-mono font-medium text-gray-300 hover:text-white cursor-pointer transition ${isUploadingAttachment ? "opacity-50 pointer-events-none" : ""}`}>
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>{attachmentFile ? attachmentFile.name : "Choose File (PDF, DOCX, TXT, images)"}</span>
+                      <input
+                        type="file"
+                        accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
+                        disabled={isUploadingAttachment || submittingContact}
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setAttachmentFile(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {attachmentFile && (
+                      <button
+                        type="button"
+                        onClick={() => setAttachmentFile(null)}
+                        className="text-[10px] text-red-400 hover:text-red-300 font-mono transition"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {contactSuccess && (

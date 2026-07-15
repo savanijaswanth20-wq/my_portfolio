@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { 
   X, Lock, ShieldCheck, Save, Plus, Trash2, Edit3, 
   MessageSquare, Sliders, Briefcase, Award, Check, RefreshCw, Eye,
-  Mail, Phone, Send, Sparkles, UploadCloud, LogOut
+  Mail, Phone, Send, Sparkles, UploadCloud, LogOut, FileText
 } from "lucide-react";
 import { PortfolioData, ProjectData, SkillCategory, TimelineEvent, CertificateData, ContactMessage } from "../types";
 import { supabase } from "../lib/supabaseClient";
@@ -1158,36 +1158,55 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 relative">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="text-xs font-bold text-white block">{msg.name}</span>
-                          <span className="text-[10px] text-gray-400 font-mono">{msg.email} | {msg.company}</span>
+                  {messages.map((msg) => {
+                    const match = msg.message.match(/📎 \*\*Attachment:\*\* \[(.*?)\]\((.*?)\)/);
+                    const cleanMessage = match ? msg.message.replace(/📎 \*\*Attachment:\*\* \[(.*?)\]\((.*?)\)/, "").trim() : msg.message;
+                    const attachmentName = match ? match[1] : null;
+                    const attachmentUrl = match ? match[2] : null;
+
+                    return (
+                      <div key={msg.id} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 relative">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-white block">{msg.name}</span>
+                            <span className="text-[10px] text-gray-400 font-mono">{msg.email} | {msg.company}</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-gray-500">{new Date(msg.timestamp).toLocaleString()}</span>
                         </div>
-                        <span className="text-[10px] font-mono text-gray-500">{new Date(msg.timestamp).toLocaleString()}</span>
+                        <p className="text-xs text-gray-300 font-mono bg-black/40 rounded p-3 leading-relaxed whitespace-pre-wrap">
+                          {cleanMessage}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <a 
+                            href={`mailto:${msg.email}?subject=Savani Jaswanth Portfolio Feedback`} 
+                            className="px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-300 transition"
+                          >
+                            Reply Email
+                          </a>
+                          <a 
+                            href={`https://wa.me/?text=Hi%20${encodeURIComponent(msg.name)}`} 
+                            target="_blank" 
+                            referrerPolicy="no-referrer"
+                            className="px-2.5 py-1 bg-green-500/10 hover:bg-green-500/20 rounded text-[10px] text-green-400 transition"
+                          >
+                            WhatsApp Contact
+                          </a>
+                          {attachmentUrl && (
+                            <a 
+                              href={attachmentUrl} 
+                              download={attachmentName || "attachment"}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 rounded text-[10px] text-blue-400 transition flex items-center gap-1.5"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>View Attachment ({attachmentName})</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-300 font-mono bg-black/40 rounded p-3 leading-relaxed">
-                        {msg.message}
-                      </p>
-                      <div className="flex gap-2">
-                        <a 
-                          href={`mailto:${msg.email}?subject=Savani Jaswanth Portfolio Feedback`} 
-                          className="px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-300 transition"
-                        >
-                          Reply Email
-                        </a>
-                        <a 
-                          href={`https://wa.me/?text=Hi%20${encodeURIComponent(msg.name)}`} 
-                          target="_blank" 
-                          referrerPolicy="no-referrer"
-                          className="px-2.5 py-1 bg-green-500/10 hover:bg-green-500/20 rounded text-[10px] text-green-400 transition"
-                        >
-                          WhatsApp Contact
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

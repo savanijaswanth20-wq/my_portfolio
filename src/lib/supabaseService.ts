@@ -166,6 +166,14 @@ export async function fetchPortfolioData(): Promise<PortfolioData> {
 
   // Fallback to Express backend locally if Supabase is not configured
   if (!isSupabaseConfigured()) {
+    const localSaved = typeof window !== "undefined" ? localStorage.getItem("portfolio_local_data") : null;
+    if (localSaved) {
+      try {
+        return JSON.parse(localSaved);
+      } catch (e) {
+        console.error("Failed to parse local storage cache", e);
+      }
+    }
     try {
       const res = await fetch("/api/portfolio");
       if (res.ok) {
@@ -332,6 +340,9 @@ export async function updateSupabasePortfolio(data: PortfolioData): Promise<void
   // Local fallback: Save to file on Express backend
   if (!isSupabaseConfigured()) {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("portfolio_local_data", JSON.stringify(data));
+      }
       const response = await fetch("/api/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -567,30 +578,29 @@ export async function uploadFileToStorage(file: File, path: string): Promise<str
       const reader = new FileReader();
       const base64DataPromise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(",")[1];
-          resolve(base64);
+          resolve(reader.result as string);
         };
         reader.onerror = (err) => reject(err);
       });
       reader.readAsDataURL(file);
-      const fileData = await base64DataPromise;
+      const dataUrl = await base64DataPromise;
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: `${Date.now()}_${file.name}`,
-          fileData: fileData
-        })
-      });
-
-      const resData = await response.json();
-      if (!response.ok || !resData.success) {
-        throw new Error(resData.message || "Failed to upload file locally");
+      // Background upload attempt to local Express backend (non-blocking)
+      try {
+        const base64 = dataUrl.split(",")[1];
+        await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: `${Date.now()}_${file.name}`,
+            fileData: base64
+          })
+        });
+      } catch (uploadErr) {
+        console.warn("Express upload backup skipped:", uploadErr);
       }
 
-      return resData.fileUrl;
+      return dataUrl;
     } catch (error) {
       console.error("Local file upload fallback failed:", error);
       throw error;
