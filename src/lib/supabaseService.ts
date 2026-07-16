@@ -30,9 +30,8 @@ export interface SupabaseErrorInfo {
 
 // Check if Supabase env variables are configured with actual keys (not default placeholders)
 export function isSupabaseConfigured(): boolean {
-  const metaEnv = (import.meta as any).env || {};
-  const url = metaEnv.VITE_SUPABASE_URL;
-  const key = metaEnv.VITE_SUPABASE_ANON_KEY;
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
   return (
     !!url &&
     url !== "https://your-supabase-project.supabase.co" &&
