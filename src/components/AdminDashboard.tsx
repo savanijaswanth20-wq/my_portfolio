@@ -5,8 +5,9 @@ import {
   Mail, Phone, Send, Sparkles, UploadCloud, LogOut, FileText
 } from "lucide-react";
 import { PortfolioData, ProjectData, SkillCategory, TimelineEvent, CertificateData, ContactMessage } from "../types";
-import { supabase } from "../lib/supabaseClient";
-import { updateSupabasePortfolio, subscribeToContactMessages, uploadFileToStorage } from "../lib/supabaseService";
+import { auth } from "../lib/firebaseClient";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { updateFirebasePortfolio, subscribeToContactMessages, uploadFileToStorage } from "../lib/firebaseService";
 
 interface AdminDashboardProps {
   portfolio: PortfolioData;
@@ -36,28 +37,18 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
 
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // Check and listen to Supabase Authentication session state
+  // Check and listen to Firebase Authentication session state
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
         setIsAuthenticated(true);
-        setCurrentUser(session.user);
+        setCurrentUser(user);
       } else {
         setIsAuthenticated(false);
         setCurrentUser(null);
       }
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setIsAuthenticated(true);
-        setCurrentUser(session.user);
-      } else {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-      }
-    });
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   // Load submissions from database in real-time
@@ -162,13 +153,13 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
           for (const currentPassword of passwordsToTry) {
             try {
               if (currentPassword.length >= 6) {
-                const { data, error: signUpErr } = await supabase.auth.signUp({
-                  email: currentEmail,
-                  password: currentPassword
-                });
-                if (signUpErr) throw signUpErr;
-                if (data.user) {
-                  authenticatedUser = data.user;
+                const userCredential = await createUserWithEmailAndPassword(
+                  auth,
+                  currentEmail,
+                  currentPassword
+                );
+                if (userCredential.user) {
+                  authenticatedUser = userCredential.user;
                   break;
                 }
               }
@@ -183,13 +174,13 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
         for (const currentEmail of emailsToTry) {
           for (const currentPassword of passwordsToTry) {
             try {
-              const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-                email: currentEmail,
-                password: currentPassword
-              });
-              if (signInErr) throw signInErr;
-              if (data.user) {
-                authenticatedUser = data.user;
+              const userCredential = await signInWithEmailAndPassword(
+                auth,
+                currentEmail,
+                currentPassword
+              );
+              if (userCredential.user) {
+                authenticatedUser = userCredential.user;
                 break;
               }
             } catch (err: any) {
@@ -207,13 +198,13 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
             for (const currentPassword of passwordsToTry) {
               try {
                 if (currentPassword.length >= 6) {
-                  const { data, error: signUpErr } = await supabase.auth.signUp({
-                    email: currentEmail,
-                    password: currentPassword
-                  });
-                  if (signUpErr) throw signUpErr;
-                  if (data.user) {
-                    authenticatedUser = data.user;
+                  const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    currentEmail,
+                    currentPassword
+                  );
+                  if (userCredential.user) {
+                    authenticatedUser = userCredential.user;
                     break;
                   }
                 }
@@ -231,13 +222,13 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
           for (const currentPassword of passwordsToTry) {
             try {
               if (currentPassword.length >= 6) {
-                const { data, error: signUpErr } = await supabase.auth.signUp({
-                  email: uniqueFallbackEmail,
-                  password: currentPassword
-                });
-                if (signUpErr) throw signUpErr;
-                if (data.user) {
-                  authenticatedUser = data.user;
+                const userCredential = await createUserWithEmailAndPassword(
+                  auth,
+                  uniqueFallbackEmail,
+                  currentPassword
+                );
+                if (userCredential.user) {
+                  authenticatedUser = userCredential.user;
                   break;
                 }
               }
@@ -266,14 +257,14 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     setIsAuthenticated(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateSupabasePortfolio(tempPortfolio);
+      await updateFirebasePortfolio(tempPortfolio);
       onUpdate(tempPortfolio);
       alert("Portfolio data successfully synchronized and persisted in database!");
     } catch (err: any) {

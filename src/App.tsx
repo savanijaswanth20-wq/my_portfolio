@@ -10,7 +10,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import AIAssistant from "./components/AIAssistant";
 import ResumeAnalyzer from "./components/ResumeAnalyzer";
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
-import { isSupabaseEmpty, seedSupabase, subscribeToPortfolio, submitContactMessage, uploadFileToStorage } from "./lib/supabaseService";
+import { isFirebaseEmpty, seedFirebase, subscribeToPortfolio, submitContactMessage, uploadFileToStorage } from "./lib/firebaseService";
 
 const getResumeFileName = (url: string) => {
   if (url.includes("wordprocessingml") || url.includes("msword") || url.toLowerCase().endsWith(".docx") || url.toLowerCase().endsWith(".doc")) {
@@ -48,12 +48,12 @@ export default function App() {
   useEffect(() => {
     async function initFirebaseDb() {
       try {
-        const isEmpty = await isSupabaseEmpty();
+        const isEmpty = await isFirebaseEmpty();
         if (isEmpty) {
           console.log("Database is empty, fetching fallback data to seed...");
           const fallbackRes = await fetch("/api/portfolio");
           const fallbackData = await fallbackRes.json();
-          await seedSupabase(fallbackData);
+          await seedFirebase(fallbackData);
         }
       } catch (err) {
         console.error("Database pre-check failed:", err);
