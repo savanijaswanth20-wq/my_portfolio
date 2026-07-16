@@ -6,9 +6,9 @@ import {
   Sparkles, Check, Menu, X, Code, Phone, Compass, UploadCloud
 } from "lucide-react";
 import ParticleBackground from "./components/ParticleBackground";
-import AdminDashboard from "./components/AdminDashboard";
-import AIAssistant from "./components/AIAssistant";
-import ResumeAnalyzer from "./components/ResumeAnalyzer";
+const AdminDashboard = React.lazy(() => import("./components/AdminDashboard"));
+const AIAssistant = React.lazy(() => import("./components/AIAssistant"));
+const ResumeAnalyzer = React.lazy(() => import("./components/ResumeAnalyzer"));
 import { PortfolioData, ProjectData, ContactMessage } from "./types";
 import { isFirebaseEmpty, seedFirebase, subscribeToPortfolio, submitContactMessage, uploadFileToStorage } from "./lib/firebaseService";
 
@@ -307,6 +307,9 @@ export default function App() {
                   src={portfolio.hero.avatarUrl || undefined} 
                   alt="Savani Jaswanth Portrait" 
                   referrerPolicy="no-referrer"
+                  loading="eager"
+                  // @ts-ignore
+                  fetchpriority="high"
                   className="w-full h-full object-cover rounded-full transition-all duration-700"
                 />
               </div>
@@ -420,6 +423,7 @@ export default function App() {
                 <img 
                   src={proj.imageUrl || undefined} 
                   alt={proj.title} 
+                  loading="lazy"
                   className="w-full h-full object-cover opacity-75 group-hover:scale-103 transition-transform duration-500"
                 />
                 
@@ -505,7 +509,9 @@ export default function App() {
           className="absolute -top-10 left-1/3 w-96 h-96 rounded-full filter blur-3xl opacity-10 pointer-events-none"
           style={{ backgroundColor: accentColor }}
         />
-        <ResumeAnalyzer accentColor={accentColor} />
+        <React.Suspense fallback={<div className="h-48 rounded-2xl bg-white/5 border border-white/5 animate-pulse flex items-center justify-center text-xs font-mono text-gray-500">INITIATING LAB MODULES...</div>}>
+          <ResumeAnalyzer accentColor={accentColor} />
+        </React.Suspense>
       </section>
 
       {/* Experience and Proof & GitHub metrics block */}
@@ -728,16 +734,20 @@ export default function App() {
 
       {/* Render Admin Overlay panel when open */}
       {isAdminOpen && (
-        <AdminDashboard 
-          portfolio={portfolio}
-          onClose={() => setIsAdminOpen(false)}
-          onUpdate={(updatedData) => setPortfolio(updatedData)}
-          accentColor={accentColor}
-        />
+        <React.Suspense fallback={null}>
+          <AdminDashboard 
+            portfolio={portfolio}
+            onClose={() => setIsAdminOpen(false)}
+            onUpdate={(updatedData) => setPortfolio(updatedData)}
+            accentColor={accentColor}
+          />
+        </React.Suspense>
       )}
 
       {/* AI Personal Assistant Launcher & Popup */}
-      <AIAssistant accentColor={accentColor} glassClass={glassClass} />
+      <React.Suspense fallback={null}>
+        <AIAssistant accentColor={accentColor} glassClass={glassClass} />
+      </React.Suspense>
     </div>
   );
 }
