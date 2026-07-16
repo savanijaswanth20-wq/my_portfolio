@@ -380,11 +380,81 @@ export function subscribeToContactMessages(onUpdate: (messages: ContactMessage[]
   });
 }
 
-// Upload file to Firebase Cloud Storage
+// Compress image client-side to WebP under 200KB (max-size 1200px width/height)
+async function compressImageToWebP(file: File): Promise<File | Blob> {
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        const MAX_SIZE = 1200;
+        if (width > MAX_SIZE || height > MAX_SIZE) {
+          if (width > height) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          } else {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const name = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+                resolve(new File([blob], name, { type: "image/webp" }));
+              } else {
+                resolve(file);
+              }
+            },
+            "image/webp",
+            0.75 // 75% quality offers excellent compression with high fidelity
+          );
+        } else {
+          resolve(file);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload file to Firebase Cloud Storage (optimized with client-side compression and fail-fast fallback)
 export async function uploadFileToStorage(file: File, path: string): Promise<string> {
+  let isImage = file.type.startsWith("image/");
+  let finalFile = file;
+  let finalPath = path;
+
+  if (isImage) {
+    try {
+      finalFile = await compressImageToWebP(file) as File;
+      finalPath = path.replace(/\.[^/.]+$/, "") + ".webp";
+    } catch (compressErr) {
+      console.warn("Client-side image compression failed, using original file:", compressErr);
+    }
+  }
+
   try {
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
+    const storageRef = ref(storage, finalPath);
+
+    // Timeout upload after 3.5 seconds to prevent visual UI hangs on network issues
+    const uploadPromise = uploadBytes(storageRef, finalFile);
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error("Firebase Storage Upload Timeout")), 3500)
+    );
+
+    await Promise.race([uploadPromise, timeoutPromise]);
     const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
   } catch (error) {
