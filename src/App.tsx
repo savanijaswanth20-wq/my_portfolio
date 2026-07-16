@@ -19,16 +19,64 @@ const getResumeFileName = (url: string) => {
   return "Resume.pdf";
 };
 
-export default function App() {
-  // Master Portfolio Data State
-  const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
-  const [loading, setLoading] = useState(true);
+interface TypewriterProps {
+  name: string;
+  roles: string[];
+  accentColor: string;
+}
 
-  // Typewriter sequence
+const Typewriter: React.FC<TypewriterProps> = React.memo(({ name, roles, accentColor }) => {
   const [typedText, setTypedText] = useState("");
   const [seqIndex, setSeqIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const sequence = [
+      `Hi, I'm ${name}.`,
+      ...roles
+    ];
+
+    const currentPhrase = sequence[seqIndex];
+    let timer: number;
+
+    if (isDeleting) {
+      timer = window.setTimeout(() => {
+        setTypedText(currentPhrase.substring(0, charIndex - 1));
+        setCharIndex((prev) => prev - 1);
+      }, 35);
+    } else {
+      timer = window.setTimeout(() => {
+        setTypedText(currentPhrase.substring(0, charIndex + 1));
+        setCharIndex((prev) => prev + 1);
+      }, 75);
+    }
+
+    // Handle typing checkpoints
+    if (!isDeleting && charIndex === currentPhrase.length) {
+      timer = window.setTimeout(() => setIsDeleting(true), 2000);
+    } else if (isDeleting && charIndex === 0) {
+      setIsDeleting(false);
+      setSeqIndex((prev) => (prev + 1) % sequence.length);
+    }
+
+    return () => clearTimeout(timer);
+  }, [name, roles, seqIndex, charIndex, isDeleting]);
+
+  return (
+    <h1
+      className="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono"
+      style={{ color: accentColor }}
+    >
+      {typedText}<span className="animate-pulse">|</span>
+    </h1>
+  );
+});
+
+export default function App() {
+  // Master Portfolio Data State
+  const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Contact Form State
   const [contactForm, setContactForm] = useState({ name: "", email: "", company: "", message: "" });
@@ -76,40 +124,7 @@ export default function App() {
     };
   }, []);
 
-  // Typewriter effect
-  useEffect(() => {
-    if (!portfolio) return;
-    const sequence = [
-      `Hi, I'm ${portfolio.hero.name}.`,
-      ...portfolio.hero.roles
-    ];
 
-    const currentPhrase = sequence[seqIndex];
-    let timer: number;
-
-    if (isDeleting) {
-      timer = window.setTimeout(() => {
-        setTypedText(currentPhrase.substring(0, charIndex - 1));
-        setCharIndex((prev) => prev - 1);
-      }, 35);
-    } else {
-      timer = window.setTimeout(() => {
-        setTypedText(currentPhrase.substring(0, charIndex + 1));
-        setCharIndex((prev) => prev + 1);
-      }, 75);
-    }
-
-    // Handle typing checkpoints
-    if (!isDeleting && charIndex === currentPhrase.length) {
-      // Pause at full phrase
-      timer = window.setTimeout(() => setIsDeleting(true), 2000);
-    } else if (isDeleting && charIndex === 0) {
-      setIsDeleting(false);
-      setSeqIndex((prev) => (prev + 1) % sequence.length);
-    }
-
-    return () => clearTimeout(timer);
-  }, [portfolio, seqIndex, charIndex, isDeleting]);
 
   // Handle contact form post
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -238,12 +253,7 @@ export default function App() {
 
             {/* Typewriter role */}
             <div className="space-y-1">
-              <h1
-                className="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono"
-                style={{ color: accentColor }}
-              >
-                {typedText}<span className="animate-pulse">|</span>
-              </h1>
+              <Typewriter name={portfolio.hero.name} roles={portfolio.hero.roles} accentColor={accentColor} />
             </div>
 
             <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 font-sans">
