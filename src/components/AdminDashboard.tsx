@@ -988,16 +988,22 @@ export default function AdminDashboard({ portfolio, onClose, onUpdate, accentCol
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
-                                onChange={(e) => {
+                                onChange={async (e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      if (typeof reader.result === "string") {
-                                        updateProjectField(proj.id, "imageUrl", reader.result);
-                                      }
-                                    };
-                                    reader.readAsDataURL(file);
+                                    try {
+                                      const url = await uploadFileToStorage(file, `projects/${Date.now()}_${file.name}`);
+                                      updateProjectField(proj.id, "imageUrl", url);
+                                    } catch (err) {
+                                      console.warn("Project image upload failed, falling back to base64:", err);
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        if (typeof reader.result === "string") {
+                                          updateProjectField(proj.id, "imageUrl", reader.result);
+                                        }
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
                                   }
                                 }}
                               />
